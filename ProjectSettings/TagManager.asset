@@ -6,6 +6,11 @@ TagManager:
   tags:
   - Coin
   - Ground
+  - GroundBack
+  - GroundFront
+  - Switch
+  - Enemy
+  - Portal
   layers:
   - Default
   - TransparentFX
@@ -13,8 +18,8 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
+  - GroundBack
+  - GroundFront
   - 
   - 
   - 
