@@ -18,8 +18,19 @@ public class Foot : MonoBehaviour
             return;
         }
 
+        if (playerMove.showCollisionDebug)
+        {
+            Debug.Log(
+                $"[Foot] OnTriggerEnter2D with {collision.name}, tag: {collision.tag}, isTrigger: {collision.isTrigger}");
+        }
+
         if (collision.CompareTag("Switch"))
         {
+            if (playerMove.showCollisionDebug)
+            {
+                Debug.Log($"[Foot] Register switch: {collision.name}");
+            }
+
             playerMove.RegisterSwitchTrigger(collision);
             return;
         }
@@ -30,6 +41,15 @@ public class Foot : MonoBehaviour
         }
 
         touchingGrounds.Add(collision);
+
+        if (playerMove.showCollisionDebug)
+        {
+            Debug.Log(
+                $"[Foot] Enter ground: {collision.name}, " +
+                $"layer: {LayerMask.LayerToName(collision.gameObject.layer)}, " +
+                $"is current layer: {playerMove.IsCurrentGroundLayer(collision.gameObject.layer)}");
+        }
+
         RefreshGroundedState();
     }
 
@@ -40,8 +60,19 @@ public class Foot : MonoBehaviour
             return;
         }
 
+        if (playerMove.showCollisionDebug)
+        {
+            Debug.Log(
+                $"[Foot] OnTriggerExit2D with {collision.name}, tag: {collision.tag}, isTrigger: {collision.isTrigger}");
+        }
+
         if (collision.CompareTag("Switch"))
         {
+            if (playerMove.showCollisionDebug)
+            {
+                Debug.Log($"[Foot] Unregister switch: {collision.name}");
+            }
+
             playerMove.UnregisterSwitchTrigger(collision);
             return;
         }
@@ -52,6 +83,15 @@ public class Foot : MonoBehaviour
         }
 
         touchingGrounds.Remove(collision);
+
+        if (playerMove.showCollisionDebug)
+        {
+            Debug.Log(
+                $"[Foot] Exit ground: {collision.name}, " +
+                $"layer: {LayerMask.LayerToName(collision.gameObject.layer)}, " +
+                $"is current layer: {playerMove.IsCurrentGroundLayer(collision.gameObject.layer)}");
+        }
+
         RefreshGroundedState();
     }
 
