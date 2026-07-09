@@ -21,6 +21,11 @@ public class PlayerMove : MonoBehaviour
     public string frontGroundLayerName = "GroundFront";
     public string backGroundLayerName = "GroundBack";
 
+    [Header("Debug")]
+    public bool showCollisionDebug = true;
+    public Color groundedDebugColor = Color.green;
+    public Color airborneDebugColor = Color.red;
+
     private int frontGroundLayer = -1;
     private int backGroundLayer = -1;
     private Foot foot;
@@ -96,6 +101,12 @@ public class PlayerMove : MonoBehaviour
         return layer == backGroundLayer;
     }
 
+    public string GetCurrentGroundLayerName()
+    {
+        int layer = GetGroundLayerByDepth(currentDepthLayer);
+        return layer == -1 ? "Invalid" : LayerMask.LayerToName(layer);
+    }
+
     public void RefreshGroundedState()
     {
         if (foot != null)
@@ -128,27 +139,70 @@ public class PlayerMove : MonoBehaviour
         currentDepthLayer = targetLayer;
         ApplyGroundCollisionRules();
         RefreshGroundedState();
+
+        if (showCollisionDebug)
+        {
+            Debug.Log($"[PlayerMove] Switched to {currentDepthLayer}, active ground layer: {GetCurrentGroundLayerName()}");
+        }
     }
 
     public void RegisterSwitchTrigger(Collider2D switchTrigger)
     {
-        if (switchTrigger != null && switchTrigger.CompareTag("Switch"))
+        if (switchTrigger == null)
         {
-            activeSwitchTriggers.Add(switchTrigger);
+            if (showCollisionDebug)
+            {
+                Debug.Log("[PlayerMove] RegisterSwitchTrigger failed: collider is null.");
+            }
+
+            return;
+        }
+
+        if (!switchTrigger.CompareTag("Switch"))
+        {
+            if (showCollisionDebug)
+            {
+                Debug.Log(
+                    $"[PlayerMove] RegisterSwitchTrigger ignored: {switchTrigger.name} tag is '{switchTrigger.tag}', not 'Switch'.");//修复了日志不一致的问题
+            }
+
+            return;
+        }
+
+        activeSwitchTriggers.Add(switchTrigger);
+
+        if (showCollisionDebug)
+        {
+            Debug.Log(
+                $"[PlayerMove] Switch registered: {switchTrigger.name}, active switch count: {activeSwitchTriggers.Count}");
         }
     }
 
     public void UnregisterSwitchTrigger(Collider2D switchTrigger)
     {
-        if (switchTrigger != null)
+        if (switchTrigger == null)
         {
-            activeSwitchTriggers.Remove(switchTrigger);
+            return;
+        }
+
+        bool removed = activeSwitchTriggers.Remove(switchTrigger);
+
+        if (showCollisionDebug)
+        {
+            Debug.Log(
+                $"[PlayerMove] Switch unregistered: {switchTrigger.name}, removed: {removed}, active switch count: {activeSwitchTriggers.Count}");
         }
     }
 
     private bool CanSwitchLayers()
     {
         activeSwitchTriggers.RemoveWhere(collider => collider == null);
+
+        if (showCollisionDebug)
+        {
+            Debug.Log($"[PlayerMove] CanSwitchLayers check, active switch count: {activeSwitchTriggers.Count}");
+        }
+
         return activeSwitchTriggers.Count > 0;
     }
 
@@ -186,6 +240,13 @@ public class PlayerMove : MonoBehaviour
 
             bool shouldIgnore = collider2D.gameObject.layer != activeGroundLayer;
             Physics2D.IgnoreCollision(bodyCollider, collider2D, shouldIgnore);
+
+            if (showCollisionDebug)
+            {
+                Debug.Log(
+                    $"[PlayerMove] {(shouldIgnore ? "Ignore" : "Collide")} with {collider2D.name}, " +
+                    $"layer: {LayerMask.LayerToName(collider2D.gameObject.layer)}");
+            }
         }
     }
 
@@ -202,13 +263,31 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        RegisterSwitchTrigger(collision);
-    }
+    
 
-    private void OnTriggerExit2D(Collider2D collision)
+    private void OnDrawGizmos()
     {
-        UnregisterSwitchTrigger(collision);
+        if (!showCollisionDebug)
+        {
+            return;
+        }
+
+        Color debugColor = isGrounded ? groundedDebugColor : airborneDebugColor;
+        Vector3 origin = transform.position;
+        Vector3 top = origin + Vector3.up * 1.5f;
+        Vector3 right = origin + Vector3.right * 0.8f;
+
+        Gizmos.color = debugColor;
+        Gizmos.DrawLine(origin, top);
+        Gizmos.DrawSphere(top, 0.08f);
+        Gizmos.DrawLine(origin, right);
+
+#if UNITY_EDITOR
+        string debugText =
+            $"Depth: {currentDepthLayer}\n" +
+            $"Ground Layer: {GetCurrentGroundLayerName()}\n" +
+            $"Grounded: {isGrounded}";
+        UnityEditor.Handles.Label(top + Vector3.up * 0.15f, debugText);
+#endif
     }
 }
