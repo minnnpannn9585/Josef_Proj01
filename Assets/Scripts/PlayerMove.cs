@@ -15,6 +15,7 @@ public class PlayerMove : MonoBehaviour
     public float jumpForce;
     public bool isGrounded = false;
     public bool canMove = true;
+    public int playerId = 0;
 
     [Header("Depth Layer")]
     public DepthLayer currentDepthLayer = DepthLayer.Front;
@@ -263,8 +264,6 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    
-
     private void OnDrawGizmos()
     {
         if (!showCollisionDebug)
@@ -286,7 +285,8 @@ public class PlayerMove : MonoBehaviour
         string debugText =
             $"Depth: {currentDepthLayer}\n" +
             $"Ground Layer: {GetCurrentGroundLayerName()}\n" +
-            $"Grounded: {isGrounded}";
+            $"Grounded: {isGrounded}\n" +
+            $"Player Id: {playerId}";
         UnityEditor.Handles.Label(top + Vector3.up * 0.15f, debugText);
 #endif
     }
