@@ -17,7 +17,7 @@ public class Door : MonoBehaviour
     {
         if (doorCollider == null)
         {
-            doorCollider = GetComponent<Collider2D>();
+            doorCollider = transform.GetChild(0).GetComponent<Collider2D>();
         }
 
         SetDoorState(false);
