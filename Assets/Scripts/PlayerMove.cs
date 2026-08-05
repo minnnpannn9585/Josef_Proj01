@@ -3,35 +3,28 @@ using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
-    public enum DepthLayer
-    {
-        Front,
-        Back
-    }
 
     public Rigidbody2D rb;
     public Collider2D bodyCollider;
-    public float moveSpeed;
-    public float jumpForce;
-    public bool isGrounded = false;
+    public float moveSpeed = 5;
+    public float jumpForce = 300;
+    public bool isGrounded = true;
     public bool canMove = true;
     public int playerId = 0;
 
     [Header("Depth Layer")]
-    public DepthLayer currentDepthLayer = DepthLayer.Front;
-    public string frontGroundLayerName = "GroundFront";
-    public string backGroundLayerName = "GroundBack";
+    public bool atBack = true;
 
     [Header("Debug")]
     public bool showCollisionDebug = true;
     public Color groundedDebugColor = Color.green;
     public Color airborneDebugColor = Color.red;
+    
 
-    private int frontGroundLayer = -1;
-    private int backGroundLayer = -1;
+    private int frontGroundLayer = 7;
+    private int backGroundLayer = 6;
     private Foot foot;
-    private readonly HashSet<Collider2D> activeSwitchTriggers = new HashSet<Collider2D>();
-
+    public InventoryManager inventory;
     private void Awake()
     {
         if (rb == null)
@@ -41,22 +34,19 @@ public class PlayerMove : MonoBehaviour
 
         if (bodyCollider == null)
         {
-            bodyCollider = GetComponent<Collider2D>();
+            bodyCollider = GetComponent<CircleCollider2D>();
         }
 
         foot = GetComponentInChildren<Foot>();
-
-        frontGroundLayer = LayerMask.NameToLayer(frontGroundLayerName);
-        backGroundLayer = LayerMask.NameToLayer(backGroundLayerName);
-
-        if (frontGroundLayer == -1 || backGroundLayer == -1)
-        {
-            Debug.LogError("请先在 Tags and Layers 里添加 GroundFront 和 GroundBack 两个 layer。");
-        }
     }
 
     private void Start()
     {
+        inventory = GetComponent<InventoryManager>();
+        inventory.AddItem("Key");
+        inventory.AddItem("Shovel");
+        inventory.AddItem("Potion");
+        inventory.AddItem("Coin");
         ApplyGroundCollisionRules();
         RefreshGroundedState();
     }
@@ -79,11 +69,11 @@ public class PlayerMove : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.W))
         {
-            TrySwitchDepthLayer(DepthLayer.Back);
+            SwitchDepthLayer(true);
         }
         else if (Input.GetKeyDown(KeyCode.S))
         {
-            TrySwitchDepthLayer(DepthLayer.Front);
+            SwitchDepthLayer(false);
         }
     }
 
@@ -94,19 +84,9 @@ public class PlayerMove : MonoBehaviour
 
     public bool IsCurrentGroundLayer(int layer)
     {
-        if (currentDepthLayer == DepthLayer.Front)
-        {
-            return layer == frontGroundLayer;
-        }
-
-        return layer == backGroundLayer;
+        return atBack ? layer == backGroundLayer : layer == frontGroundLayer;
     }
 
-    public string GetCurrentGroundLayerName()
-    {
-        int layer = GetGroundLayerByDepth(currentDepthLayer);
-        return layer == -1 ? "Invalid" : LayerMask.LayerToName(layer);
-    }
 
     public void RefreshGroundedState()
     {
@@ -120,101 +100,15 @@ public class PlayerMove : MonoBehaviour
         }
     }
 
-    private void TrySwitchDepthLayer(DepthLayer targetLayer)
+    private void SwitchDepthLayer(bool targetLayer)
     {
-        if (currentDepthLayer == targetLayer)
+        if (atBack == targetLayer)
         {
             return;
         }
-
-        if (GetGroundLayerByDepth(targetLayer) == -1)
-        {
-            return;
-        }
-
-        if (!CanSwitchLayers())
-        {
-            return;
-        }
-
-        currentDepthLayer = targetLayer;
+        atBack = targetLayer;
         ApplyGroundCollisionRules();
         RefreshGroundedState();
-
-        if (showCollisionDebug)
-        {
-            Debug.Log($"[PlayerMove] Switched to {currentDepthLayer}, active ground layer: {GetCurrentGroundLayerName()}");
-        }
-    }
-
-    public void RegisterSwitchTrigger(Collider2D switchTrigger)
-    {
-        if (switchTrigger == null)
-        {
-            if (showCollisionDebug)
-            {
-                Debug.Log("[PlayerMove] RegisterSwitchTrigger failed: collider is null.");
-            }
-
-            return;
-        }
-
-        if (!switchTrigger.CompareTag("Switch"))
-        {
-            if (showCollisionDebug)
-            {
-                Debug.Log(
-                    $"[PlayerMove] RegisterSwitchTrigger ignored: {switchTrigger.name} tag is '{switchTrigger.tag}', not 'Switch'.");//修复了日志不一致的问题
-            }
-
-            return;
-        }
-
-        activeSwitchTriggers.Add(switchTrigger);
-
-        if (showCollisionDebug)
-        {
-            Debug.Log(
-                $"[PlayerMove] Switch registered: {switchTrigger.name}, active switch count: {activeSwitchTriggers.Count}");
-        }
-    }
-
-    public void UnregisterSwitchTrigger(Collider2D switchTrigger)
-    {
-        if (switchTrigger == null)
-        {
-            return;
-        }
-
-        bool removed = activeSwitchTriggers.Remove(switchTrigger);
-
-        if (showCollisionDebug)
-        {
-            Debug.Log(
-                $"[PlayerMove] Switch unregistered: {switchTrigger.name}, removed: {removed}, active switch count: {activeSwitchTriggers.Count}");
-        }
-    }
-
-    private bool CanSwitchLayers()
-    {
-        activeSwitchTriggers.RemoveWhere(collider => collider == null);
-
-        if (showCollisionDebug)
-        {
-            Debug.Log($"[PlayerMove] CanSwitchLayers check, active switch count: {activeSwitchTriggers.Count}");
-        }
-
-        return activeSwitchTriggers.Count > 0;
-    }
-
-    private int GetGroundLayerByDepth(DepthLayer depthLayer)
-    {
-        if (depthLayer == DepthLayer.Front)
-        {
-            return frontGroundLayer;
-        }
-
-        return backGroundLayer;
     }
 
     private void ApplyGroundCollisionRules()
@@ -223,47 +117,58 @@ public class PlayerMove : MonoBehaviour
         {
             return;
         }
-
-        Collider2D[] allColliders = FindObjectsOfType<Collider2D>();
-        int activeGroundLayer = GetGroundLayerByDepth(currentDepthLayer);
-
-        foreach (Collider2D collider2D in allColliders)
+        GameObject[] backObjects = GameObject.FindGameObjectsWithTag("GroundBack");
+        GameObject[] frontObjects = GameObject.FindGameObjectsWithTag("GroundFront");
+        foreach(GameObject entity in backObjects)
         {
-            if (collider2D == null || collider2D == bodyCollider || collider2D.isTrigger)
+            Collider2D collider2D = entity.GetComponent<Collider2D>();
+            if (collider2D == null || collider2D == bodyCollider)
             {
                 continue;
             }
-
-            if (!IsGroundLayer(collider2D.gameObject.layer))
+            Physics2D.IgnoreCollision(bodyCollider, collider2D, !atBack);
+        }
+        foreach(GameObject entity in frontObjects)
+        {
+            Collider2D collider2D = entity.GetComponent<Collider2D>();
+            if (collider2D == null || collider2D == bodyCollider)
             {
                 continue;
             }
-
-            bool shouldIgnore = collider2D.gameObject.layer != activeGroundLayer;
-            Physics2D.IgnoreCollision(bodyCollider, collider2D, shouldIgnore);
-
-            if (showCollisionDebug)
-            {
-                Debug.Log(
-                    $"[PlayerMove] {(shouldIgnore ? "Ignore" : "Collide")} with {collider2D.name}, " +
-                    $"layer: {LayerMask.LayerToName(collider2D.gameObject.layer)}");
-            }
+            Physics2D.IgnoreCollision(bodyCollider, collider2D, atBack);
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Coin"))
+        GameObject entity = collision.gameObject;
+        if (entity.CompareTag("Coin"))
         {
-            Destroy(collision.gameObject);
+            inventory.AddItem("Coin",1);
+            Destroy(entity);
         }
-
-        if (collision.gameObject.CompareTag("Enemy"))
-        {
-            Destroy(gameObject);
-        }
+        
     }
 
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        GameObject entity = collision.gameObject;
+        if(entity.name == "Key")
+        {
+            inventory.AddItem("Key",1);
+            Destroy(entity);
+        }
+        if(entity.name == "Shovel")
+        {
+            inventory.AddItem("Shovel",1);
+            Destroy(entity);
+        }
+        if (entity.name == "Potion")
+        {
+            inventory.AddItem("Potion",1);
+            Destroy(entity);
+        }
+    }
     private void OnDrawGizmos()
     {
         if (!showCollisionDebug)
@@ -283,8 +188,7 @@ public class PlayerMove : MonoBehaviour
 
 #if UNITY_EDITOR
         string debugText =
-            $"Depth: {currentDepthLayer}\n" +
-            $"Ground Layer: {GetCurrentGroundLayerName()}\n" +
+            $"At Back: {atBack}\n" +
             $"Grounded: {isGrounded}\n" +
             $"Player Id: {playerId}";
         UnityEditor.Handles.Label(top + Vector3.up * 0.15f, debugText);

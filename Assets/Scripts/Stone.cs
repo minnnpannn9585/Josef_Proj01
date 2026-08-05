@@ -29,7 +29,7 @@ public class Stone : MonoBehaviour
             return;
         }
 
-        if (currentPlayer.playerId == 0 || currentPlayer.playerId == 2)
+        if (currentPlayer.playerId == 0 || currentPlayer.playerId == 1)
         {
             Rigidbody2D playerRb = currentPlayer.GetComponent<Rigidbody2D>();
 
@@ -48,8 +48,9 @@ public class Stone : MonoBehaviour
                 currentPlayer.transform.position = Vector3.zero;
             }
         }
-        else if (currentPlayer.playerId == 1)
+        else if (currentPlayer.playerId == 2)
         {
+            currentPlayer.inventory.RemoveItem("Shovel",1);
             Destroy(gameObject);
         }
     }

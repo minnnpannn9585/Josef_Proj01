@@ -8,7 +8,7 @@ public class Trap : MonoBehaviour
 
     private Vector3 initialPlayerPosition;
     private bool hasInitialPlayerPosition;
-
+    public PlayerMove playerMove;
     private void Start()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -17,6 +17,10 @@ public class Trap : MonoBehaviour
         {
             initialPlayerPosition = player.transform.position;
             hasInitialPlayerPosition = true;
+        }
+        if(playerMove == null)
+        {
+            playerMove = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMove>();
         }
     }
 
@@ -29,6 +33,15 @@ public class Trap : MonoBehaviour
 
         Transform playerTransform = collision.transform;
         Rigidbody2D playerRb = collision.GetComponent<Rigidbody2D>();
+
+        if (playerMove.playerId == 0)
+        {
+            playerMove.playerId = 2;
+        }
+        else if(playerMove.playerId == 2)
+        {
+            playerMove.playerId = 0;
+        }
 
         if (respawnPoint != null)
         {

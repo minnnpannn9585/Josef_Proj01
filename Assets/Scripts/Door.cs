@@ -8,8 +8,7 @@ public class Door : MonoBehaviour
     public Collider2D doorCollider;
     public GameObject closedVisual;
     public GameObject openVisual;
-    public bool hasKey;
-
+    public PlayerMove playerMove;
     private bool isOpen;
     private bool playerInRange;
 
@@ -25,7 +24,7 @@ public class Door : MonoBehaviour
 
     private void Update()
     {
-        if (!playerInRange || isOpen || !hasKey)
+        if (!playerInRange || isOpen || !(playerMove.inventory.GetItemCount("Key")>=1))
         {
             return;
         }
@@ -50,11 +49,6 @@ public class Door : MonoBehaviour
         {
             playerInRange = false;
         }
-    }
-
-    public void SetHasKey(bool value)
-    {
-        hasKey = value;
     }
 
     private void SetDoorState(bool open)

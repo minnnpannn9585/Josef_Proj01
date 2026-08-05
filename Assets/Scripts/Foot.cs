@@ -24,16 +24,6 @@ public class Foot : MonoBehaviour
                 $"[Foot] OnTriggerEnter2D with {collision.name}, tag: {collision.tag}, isTrigger: {collision.isTrigger}");
         }
 
-        if (collision.CompareTag("Switch"))
-        {
-            if (playerMove.showCollisionDebug)
-            {
-                Debug.Log($"[Foot] Register switch: {collision.name}");
-            }
-
-            playerMove.RegisterSwitchTrigger(collision);
-            return;
-        }
 
         if (!playerMove.IsGroundLayer(collision.gameObject.layer))
         {
@@ -66,16 +56,6 @@ public class Foot : MonoBehaviour
                 $"[Foot] OnTriggerExit2D with {collision.name}, tag: {collision.tag}, isTrigger: {collision.isTrigger}");
         }
 
-        if (collision.CompareTag("Switch"))
-        {
-            if (playerMove.showCollisionDebug)
-            {
-                Debug.Log($"[Foot] Unregister switch: {collision.name}");
-            }
-
-            playerMove.UnregisterSwitchTrigger(collision);
-            return;
-        }
 
         if (!playerMove.IsGroundLayer(collision.gameObject.layer))
         {
