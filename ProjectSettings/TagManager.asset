@@ -12,6 +12,8 @@ TagManager:
   - Enemy
   - Portal
   - Potion
+  - Sabotage
+  - Help
   layers:
   - Default
   - TransparentFX
