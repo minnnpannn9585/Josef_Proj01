@@ -33,12 +33,11 @@ public class Trap : MonoBehaviour
 
         Transform playerTransform = collision.transform;
         Rigidbody2D playerRb = collision.GetComponent<Rigidbody2D>();
-
-        if (playerMove.playerId == 0)
+        if (playerMove.playerId == 0 && !playerMove.pass)
         {
             playerMove.playerId = 2;
         }
-        else if(playerMove.playerId == 2)
+        else if(playerMove.playerId != 0)
         {
             playerMove.playerId = 0;
         }

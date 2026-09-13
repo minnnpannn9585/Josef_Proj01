@@ -20,7 +20,8 @@ public class PlayerMove : MonoBehaviour
     public Color groundedDebugColor = Color.green;
     public Color airborneDebugColor = Color.red;
     
-
+    public bool pass = false;
+    public GameObject wall;
     private int frontGroundLayer = 7;
     private int backGroundLayer = 6;
     private Foot foot;
@@ -67,14 +68,14 @@ public class PlayerMove : MonoBehaviour
             rb.AddForce(new Vector2(0f, jumpForce));
         }
 
-        if (Input.GetKeyDown(KeyCode.W))
+        /*if (Input.GetKeyDown(KeyCode.W))
         {
             SwitchDepthLayer(true);
         }
         else if (Input.GetKeyDown(KeyCode.S))
         {
             SwitchDepthLayer(false);
-        }
+        }*/
     }
 
     public bool IsGroundLayer(int layer)
@@ -165,7 +166,8 @@ public class PlayerMove : MonoBehaviour
         }
         if (entity.name == "Potion")
         {
-            inventory.AddItem("Potion",1);
+            jumpForce = 600;
+            //inventory.AddItem("Potion",1);
             Destroy(entity);
         }
     }

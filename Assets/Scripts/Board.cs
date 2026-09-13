@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class Board : MonoBehaviour
@@ -12,17 +13,17 @@ public class Board : MonoBehaviour
     public string sabotageMessage;
     public string helpMessage;
     public KeyCode interactKey = KeyCode.E;
-
+    public Button button;
+    
     public bool changeable = false;
     public int type = 0;
+    private ButtonDetector buttonDetector;
     private int status = 0;
     private bool playerInRange;
     private PlayerMove playerMove;
-    private GameObject sabotage;
     private GameObject help;
     private void Awake()
     {
-        sabotage = GameObject.FindGameObjectWithTag("Sabotage");
         help = GameObject.FindGameObjectWithTag("Help");
     }
     private void Start()
@@ -31,7 +32,7 @@ public class Board : MonoBehaviour
         {
             targetUI.SetActive(false);
         }
-        
+        buttonDetector = button.GetComponent<ButtonDetector>();
     }
 
     private void Update()
@@ -43,17 +44,10 @@ public class Board : MonoBehaviour
 
         bool isOpening = !targetUI.activeSelf;
         targetUI.SetActive(isOpening);
-
-        if (playerMove.playerId != 0&&changeable)
+        buttonDetector.board = this;
+        if (playerMove.playerId != 0)
         {
-            if(playerMove.playerId == 2)
-            {
-                sabotage.SetActive(true);
-            }
-            else
-            {
-                sabotage.SetActive(false);
-            }
+
             if(type == 1 && playerMove.playerId != 1)
             {
                 help.SetActive(false);
@@ -63,12 +57,17 @@ public class Board : MonoBehaviour
                 help.SetActive(true);
             }
             
-
+            
             
         }
-        else
-        {
-            sabotage.SetActive(false);
+        else if(type == 2 && playerMove.playerId == 0)
+            
+            {
+                help.SetActive(false);
+                playerMove.pass = true;
+                playerMove.wall.SetActive(false);
+            }
+        else{
             help.SetActive(false);
         }
 

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class ButtonDetector : MonoBehaviour
 {
     public Button myButton;
-    
+    public Board board;
     void Start()
     {
         // 添加点击监听
@@ -15,7 +15,10 @@ public class ButtonDetector : MonoBehaviour
     
     void OnButtonClick()
     {
-        Debug.Log("按钮被点击了！");
-        // 执行你的逻辑
+        if(board != null)
+        {
+            board.boardMessage = board.helpMessage;
+            board.targetUI.SetActive(false);
+        }
     }
 }

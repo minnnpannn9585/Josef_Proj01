@@ -48,7 +48,7 @@ public class Stone : MonoBehaviour
                 currentPlayer.transform.position = Vector3.zero;
             }
         }
-        else if (currentPlayer.playerId == 2)
+        else if (currentPlayer.playerId == 2 && currentPlayer.inventory.GetItemCount("Shovel") > 0)
         {
             currentPlayer.inventory.RemoveItem("Shovel",1);
             Destroy(gameObject);
